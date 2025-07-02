@@ -1,0 +1,16 @@
+# Ignore Android Studio project files
+.idea/
+*.iml
+
+# Ignore Gradle-related files
+.gradle/
+/build/
+**/build/
+
+# Ignore local.properties (contains SDK paths)
+local.properties
+
+# MacOS, Windows, and Linux system files
+.DS_Store
+Thumbs.db
+
