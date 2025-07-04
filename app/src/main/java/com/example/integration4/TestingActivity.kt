@@ -1,9 +1,9 @@
 package com.example.integration4
 
-import ActivityUtils
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.github.imcloudfloating.markdown.MarkdownIt
+import java.io.File
 
 class TestingActivity : AppCompatActivity() {
 
@@ -14,12 +14,8 @@ class TestingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_testing)
 
         markdownView = findViewById(R.id.markdown_view)
-        markdownView.markdownString = loadFileFromInternalStorage()
+        markdownView.markdownString = ActivityUtils.getReportedReadmeLogsFile(this).readText()
 
     }
 
-    private fun loadFileFromInternalStorage(): String {
-        val file = ActivityUtils.reportedReadmeLogsFile
-        return file.readText()
-    }
 }

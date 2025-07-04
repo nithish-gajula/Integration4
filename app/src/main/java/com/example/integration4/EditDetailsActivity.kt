@@ -1,7 +1,5 @@
 package com.example.integration4
 
-import ActivityUtils
-import LOGGING
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -14,7 +12,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.RequestQueue
@@ -25,7 +22,6 @@ import com.google.android.material.textfield.TextInputLayout
 
 class EditDetailsActivity : AppCompatActivity() {
 
-    private lateinit var userDataViewModel: UserDataViewModel
     private lateinit var nameET: EditText
     private lateinit var emailET: EditText
     private lateinit var phoneNumberET: EditText
@@ -44,7 +40,6 @@ class EditDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_details)
 
-        userDataViewModel = ViewModelProvider(this)[UserDataViewModel::class.java]
         profileImage = findViewById(R.id.profile_image_id)
         nameET = findViewById(R.id.name_et_id)
         emailET = findViewById(R.id.email_et_id)
@@ -63,8 +58,10 @@ class EditDetailsActivity : AppCompatActivity() {
         phoneNumberTIL.setStartIconTintList(null)
         ageTIL.setStartIconTintList(null)
 
-        latestProfileImage = userDataViewModel.profileId.toInt()
-        profileImage.setImageResource(ActivityUtils.avatars[userDataViewModel.profileId.toInt() - 1])
+        GlobalAccess.loadUserData(this)
+
+        latestProfileImage = GlobalAccess.profileId.toInt()
+        profileImage.setImageResource(ActivityUtils.avatars[GlobalAccess.profileId.toInt() - 1])
 
         val dialogBuilder = AlertDialog.Builder(this)
         val inflater = LayoutInflater.from(this)
@@ -74,14 +71,14 @@ class EditDetailsActivity : AppCompatActivity() {
         alertDialog = dialogBuilder.create()
         alertDialog.setCanceledOnTouchOutside(false)
 
-        nameET.setText(userDataViewModel.userName)
-        emailET.setText(userDataViewModel.email)
-        phoneNumberET.setText(userDataViewModel.phoneNumber)
-        ageET.setText(userDataViewModel.age)
+        nameET.setText(GlobalAccess.userName)
+        emailET.setText(GlobalAccess.email)
+        phoneNumberET.setText(GlobalAccess.phoneNumber)
+        ageET.setText(GlobalAccess.age)
 
         profileImage.setOnClickListener { selectImagePopUp() }
         saveBTN.setOnClickListener { savaDataFunction() }
-        resetPasswordTV.setOnClickListener { ActivityUtils.navigateToActivity(this, Intent(this, ForgotPasswordActivity::class.java)) }
+        resetPasswordTV.setOnClickListener { ActivityUtils.navigateToActivity(this, Intent(this, ForgotPasswordActivity::class.java),"EditDetailsActivity received button-forgotpassword action from user") }
 
     }
 
@@ -218,12 +215,12 @@ class EditDetailsActivity : AppCompatActivity() {
             Method.POST, getString(R.string.spreadsheet_url),
             { response ->
                 Toast.makeText(this, response, Toast.LENGTH_SHORT).show()
-                LOGGING.INFO(contextTAG, "Updating User Details, Got Response - $response")
+                LOGGING.INFO(this, contextTAG, "Updating User Details, Got Response - $response")
                 alertDialog.dismiss()
-                ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java))
+                ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java), "EditDetailsActivity saved User edited details ")
             },
             { error ->
-                LOGGING.DEBUG(contextTAG, "Updating User Details, Got Error - $error")
+                LOGGING.DEBUG(this, contextTAG, "Updating User Details, Got Error - $error")
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -237,8 +234,8 @@ class EditDetailsActivity : AppCompatActivity() {
             override fun getParams(): Map<String, String> {
                 return hashMapOf(
                     "action" to "editDetails",
-                    "userId" to userDataViewModel.userId,
-                    "roomId" to userDataViewModel.roomId,
+                    "userId" to GlobalAccess.userId,
+                    "roomId" to GlobalAccess.roomId,
                     "userName" to name,
                     "email" to email,
                     "phoneNumber" to phoneNumber,

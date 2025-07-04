@@ -1,10 +1,5 @@
 package com.example.integration4
 
-import ActivityUtils
-import CustomAdapter
-import Item
-import LOGGING
-import Section
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,7 +10,6 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.RetryPolicy
@@ -24,7 +18,7 @@ import com.android.volley.toolbox.Volley
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.FileWriter
+import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,7 +28,6 @@ class GetAllDataFragment : Fragment() {
 
     private lateinit var adapter: ListAdapter
     private lateinit var listView: ListView
-    private val userDataViewModel: UserDataViewModel by activityViewModels()
     private val groupedItemsJson = JSONObject()
     private lateinit var warningTV: TextView
     private lateinit var roomActivity: RoomActivity
@@ -74,7 +67,7 @@ class GetAllDataFragment : Fragment() {
     }
 
     private fun getItems() {
-        val roomId = userDataViewModel.roomId
+        val roomId = GlobalAccess.roomId
         val param = "?action=getTotal&roomId=$roomId"
         val url = resources.getString(R.string.spreadsheet_url)
         roomActivity.animationView.setAnimation(R.raw.files_loading)
@@ -84,7 +77,7 @@ class GetAllDataFragment : Fragment() {
             Request.Method.GET, url + param,
             { response -> parseItems(response) }
         ) { error ->
-            LOGGING.INFO(contextTAG, "Got error = $error")
+            LOGGING.INFO(requireContext(), contextTAG, "Got error = $error")
         }
 
         val policy: RetryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
@@ -171,7 +164,7 @@ class GetAllDataFragment : Fragment() {
 
             categorizeItems(sortedMonths)
         } catch (e: JSONException) {
-            LOGGING.DEBUG(contextTAG, "Got error $e")
+            LOGGING.DEBUG(requireContext(), contextTAG, "Got error $e")
             warningTV.visibility = View.VISIBLE
             warningTV.text = jsonResponse
             roomActivity.alertDialog.dismiss()
@@ -360,25 +353,13 @@ class GetAllDataFragment : Fragment() {
 
     private fun createAndWriteToFile(jsonObject: JSONObject) {
         try {
-            // Ensure the directory exists
-            if (!ActivityUtils.directory.exists()) {
-                ActivityUtils.directory.mkdirs()
-            }
-
-            // Ensure the file exists
-            if (!ActivityUtils.roomMontlyExpensesFile.exists()) {
-                ActivityUtils.roomMontlyExpensesFile.createNewFile()
-            }
-
-            // Write the JSON string to the file
-            FileWriter(ActivityUtils.roomMontlyExpensesFile).use { writer ->
-                writer.write(jsonObject.toString(4)) // Pretty print with indentation level of 4
-            }
-
-            LOGGING.DEBUG(contextTAG, "Successfully wrote JSON to file.")
+            val fileName = getString(R.string.roomExpensesFileName)
+            val roomExpensesFile = File(requireContext().getExternalFilesDir(null), fileName)
+            roomExpensesFile.writeText(jsonObject.toString(4))
+            LOGGING.DEBUG(requireContext(), contextTAG, "Successfully wrote JSON to file.")
 
         } catch (e: IOException) {
-            LOGGING.DEBUG(contextTAG, "Writing to file failed: ${e.message}")
+            LOGGING.DEBUG(requireContext(), contextTAG, "Writing to file failed: ${e.message}")
             e.printStackTrace()
         }
     }

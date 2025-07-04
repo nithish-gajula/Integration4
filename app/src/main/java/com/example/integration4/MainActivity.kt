@@ -1,7 +1,5 @@
 package com.example.integration4
 
-import ActivityUtils
-import LOGGING
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
@@ -18,7 +16,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.RequestQueue
@@ -27,7 +24,7 @@ import com.android.volley.toolbox.Volley
 import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.FileWriter
+import java.io.File
 import java.io.IOException
 import java.util.Calendar
 import kotlin.random.Random
@@ -38,7 +35,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var createRoomBTN: Button
     private lateinit var resultTV: TextView
     private lateinit var requestQueue: RequestQueue
-    private lateinit var userDataViewModel: UserDataViewModel
     private lateinit var animationView: LottieAnimationView
     private lateinit var alertDialog: AlertDialog
     private lateinit var customOverflowIcon: ImageView
@@ -49,11 +45,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        GlobalAccess.loadUserData(this)
+
         joinRoomBTN = findViewById(R.id.join_room_btn_id)
         createRoomBTN = findViewById(R.id.create_room_btn_id)
         resultTV = findViewById(R.id.result_tv_id)
         requestQueue = Volley.newRequestQueue(applicationContext)
-        userDataViewModel = ViewModelProvider(this)[UserDataViewModel::class.java]
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -78,6 +75,9 @@ class MainActivity : AppCompatActivity() {
         alertDialog = dialogBuilder.create()
         alertDialog.setCanceledOnTouchOutside(false)
 
+        ActivityUtils.getReportedLogsFile(this).createNewFile()
+        ActivityUtils.getReportedReadmeLogsFile(this).createNewFile()
+
         joinRoomBTN.setOnClickListener {
             resultTV.visibility = View.INVISIBLE
             joinRoomDialog()
@@ -88,10 +88,10 @@ class MainActivity : AppCompatActivity() {
             createRoomFunction()
         }
 
-        if (userDataViewModel.navigateToLoginActivity) {
-            ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java))
-        } else if (!userDataViewModel.isRoomLengthLessThanOne) {
-            ActivityUtils.navigateToActivity(this, Intent(this, RoomActivity::class.java))
+        if (GlobalAccess.navigateToLoginActivity) {
+            ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java), "MainActivity Received navigateToLoginActivity = true from GlobalAccess Object")
+        } else if (!GlobalAccess.isRoomLengthLessThanOne) {
+            ActivityUtils.navigateToActivity(this, Intent(this, RoomActivity::class.java), "MainActivity Received isRoomLengthLessThanOne = false from GlobalAccess Object")
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_profile -> {
                     ActivityUtils.navigateToActivity(
                         this,
-                        Intent(this, EditDetailsActivity::class.java)
+                        Intent(this, EditDetailsActivity::class.java), "MainActivity received menu-profile action from user"
                     )
                     true
                 }
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_contact_us -> {
                     ActivityUtils.navigateToActivity(
                         this,
-                        Intent(this, ContactUsActivity::class.java)
+                        Intent(this, ContactUsActivity::class.java), "MainActivity received menu-contactUs action from user"
                     )
                     true
                 }
@@ -141,8 +141,8 @@ class MainActivity : AppCompatActivity() {
                         .setMessage("Are you sure you want to logout?")
                         .setPositiveButton("Logout") { _, _ ->
                             // If the user confirms, proceed with logout
-                            LOGGING.ERROR(contextTAG, "User Logged out from Menu")
-                            ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java))
+                            LOGGING.ERROR(this, contextTAG, "User Logged out from Menu")
+                            ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java), "MainActivity Received menu-logout action from user")
                         }
                         .setNegativeButton("Cancel") { dialog, _ ->
                             // If the user cancels, dismiss the dialog
@@ -199,14 +199,14 @@ class MainActivity : AppCompatActivity() {
         val stringRequest = object : StringRequest(
             Method.POST, getString(R.string.spreadsheet_url),
             { response ->
-                LOGGING.INFO(contextTAG, "Join Room, Got response = $response")
+                LOGGING.INFO(this, contextTAG, "Join Room, Got response = $response")
                 extractRoomJoiningJsonData(response, roomID)
                 Handler(Looper.getMainLooper()).postDelayed({
                     alertDialog.dismiss()
                 }, 2000)
             },
             { error ->
-                LOGGING.DEBUG(contextTAG, " Join Room, Error = $error")
+                LOGGING.DEBUG(this, contextTAG, " Join Room, Error = $error")
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -220,7 +220,7 @@ class MainActivity : AppCompatActivity() {
                 return hashMapOf(
                     "action" to "joinRoom",
                     "roomId" to roomID,
-                    "userId" to userDataViewModel.userId
+                    "userId" to GlobalAccess.userId
                 )
             }
         }
@@ -249,7 +249,7 @@ class MainActivity : AppCompatActivity() {
                         animationView.setAnimation(R.raw.protected_shield)
                         animationView.playAnimation()
                         Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
-                        LOGGING.INFO(
+                        LOGGING.INFO(this,
                             contextTAG, "Room Joining Success - userID = ${jsonItem.getString("id")}, RoomID = ${
                                 jsonItem.getString("roomId")
                             }"
@@ -258,13 +258,13 @@ class MainActivity : AppCompatActivity() {
                         Handler(Looper.getMainLooper()).postDelayed({
                             ActivityUtils.navigateToActivity(
                                 this,
-                                Intent(this, RoomActivity::class.java)
+                                Intent(this, RoomActivity::class.java), "MainActivity received room joining success from database"
                             )
                         }, 2000)
                     }
 
                     !roomIdStatus.toBoolean() -> {
-                        LOGGING.DEBUG(
+                        LOGGING.DEBUG(this,
                             contextTAG,
                             "Room Joining Failed with Invalid RoomID = ${getString(R.string.invalid_roomId)}"
                         )
@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     else -> {
-                        LOGGING.DEBUG(
+                        LOGGING.DEBUG(this,
                             contextTAG,
                             " Room Joining Failed, Reason - ${getString(R.string.something_went_wrong)}"
                         )
@@ -289,7 +289,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
             } else {
-                LOGGING.DEBUG(
+                LOGGING.DEBUG(this,
                     contextTAG,
                     " Room Joining Failed, Reason - ${getString(R.string.no_data_found)}"
                 )
@@ -312,14 +312,14 @@ class MainActivity : AppCompatActivity() {
         val stringRequest = object : StringRequest(
             Method.POST, getString(R.string.spreadsheet_url),
             { response ->
-                LOGGING.INFO(contextTAG, "Create Room, Got response = $response")
+                LOGGING.INFO(this, contextTAG, "Create Room, Got response = $response")
                 extractRoomCreationJsonData(response)
                 Handler(Looper.getMainLooper()).postDelayed({
                     alertDialog.dismiss()
                 }, 2000)
             },
             { error ->
-                LOGGING.DEBUG(contextTAG, "Create Room, Got Error = $error")
+                LOGGING.DEBUG(this, contextTAG, "Create Room, Got Error = $error")
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -333,7 +333,7 @@ class MainActivity : AppCompatActivity() {
             override fun getParams(): Map<String, String> {
                 return hashMapOf(
                     "action" to "createRoom",
-                    "userId" to userDataViewModel.userId,
+                    "userId" to GlobalAccess.userId,
                     "roomId" to createRoomId(),
                 )
             }
@@ -357,7 +357,7 @@ class MainActivity : AppCompatActivity() {
         val random = generateRandomString()
 
         val finalRoomId = "$minute$year${random[0]}$hour$month${random[1]}$day$second${random[2]}"
-        LOGGING.INFO(contextTAG, "Created Room ID = $finalRoomId")
+        LOGGING.INFO(this, contextTAG, "Created Room ID = $finalRoomId")
 
         return finalRoomId
     }
@@ -391,7 +391,7 @@ class MainActivity : AppCompatActivity() {
 
                 when {
                     createRoomStatus.toBoolean() -> {
-                        LOGGING.INFO(contextTAG, "Room Creation Success in Google Spreadsheets")
+                        LOGGING.INFO(this, contextTAG, "Room Creation Success in Google Spreadsheets")
                         animationView.setAnimation(R.raw.done)
                         animationView.playAnimation()
                         storeRoomIdAndAdminStatus(roomID, adminStatus)
@@ -399,13 +399,13 @@ class MainActivity : AppCompatActivity() {
                         Handler(Looper.getMainLooper()).postDelayed({
                             ActivityUtils.navigateToActivity(
                                 this,
-                                Intent(this, RoomActivity::class.java)
+                                Intent(this, RoomActivity::class.java), "MainActivity received room creation success from user"
                             )
                         }, 2000)
                     }
 
                     !userIdStatus.toBoolean() -> {
-                        LOGGING.DEBUG(
+                        LOGGING.DEBUG(this,
                             contextTAG,
                             "Room creation failed, Reason - ${getString(R.string.user_id_not_found)}"
                         )
@@ -416,7 +416,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     else -> {
-                        LOGGING.DEBUG(
+                        LOGGING.DEBUG(this,
                             contextTAG,
                             "Room creation failed, Reason - ${getString(R.string.something_went_wrong)}"
                         )
@@ -428,7 +428,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
             } else {
-                LOGGING.DEBUG(
+                LOGGING.DEBUG(this,
                     contextTAG,
                     "Room Creation failed, Reason - ${getString(R.string.no_data_found)}"
                 )
@@ -438,7 +438,7 @@ class MainActivity : AppCompatActivity() {
                 resultTV.text = getString(R.string.no_data_found)
             }
         } catch (e: JSONException) {
-            LOGGING.DEBUG(contextTAG, "JSONException ${e.message}")
+            LOGGING.DEBUG(this, contextTAG, "JSONException ${e.message}")
             e.printStackTrace()
         }
     }
@@ -446,19 +446,16 @@ class MainActivity : AppCompatActivity() {
     private fun storeRoomIdAndAdminStatus(roomID: String, adminStatus: String) {
         try {
 
-            val content = ActivityUtils.userDataFile.readText()
+            val content = ActivityUtils.getUserDataFile(this).readText()
             val userData = JSONObject(content)
 
             userData.put("roomId", roomID)
             userData.put("adminStatus", adminStatus)
 
-            FileWriter(ActivityUtils.userDataFile).use { fileWriter ->
-                fileWriter.write(userData.toString())
-                fileWriter.flush()
-            }
+            ActivityUtils.getUserDataFile(this).writeText(userData.toString())
 
         } catch (e: IOException) {
-            LOGGING.DEBUG(contextTAG, "Storing roomId and AdminStatus failed, ${e.message}")
+            LOGGING.DEBUG(this, contextTAG, "Storing roomId and AdminStatus failed, ${e.message}")
             e.printStackTrace()
         }
     }
@@ -466,18 +463,15 @@ class MainActivity : AppCompatActivity() {
     private fun storeRoomId(roomID: String) {
         try {
 
-            val content = ActivityUtils.userDataFile.readText()
+            val content = ActivityUtils.getUserDataFile(this).readText()
             val userData = JSONObject(content)
 
             userData.put("roomId", roomID)
 
-            FileWriter(ActivityUtils.userDataFile).use { fileWriter ->
-                fileWriter.write(userData.toString())
-                fileWriter.flush()
-            }
+            ActivityUtils.getUserDataFile(this).writeText(userData.toString())
 
         } catch (e: IOException) {
-            LOGGING.DEBUG(contextTAG, "Storing room id failed, ${e.message}")
+            LOGGING.DEBUG(this, contextTAG, "Storing room id failed, ${e.message}")
             e.printStackTrace()
         }
     }

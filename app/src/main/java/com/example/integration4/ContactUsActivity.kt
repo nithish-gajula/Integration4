@@ -1,6 +1,5 @@
 package com.example.integration4
 
-import LOGGING
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -103,7 +102,7 @@ class ContactUsActivity : AppCompatActivity() {
         }
         intent.setType("text/html")
         intent.setPackage("com.google.android.gm")
-        LOGGING.INFO(contextTAG, "Requested to send a mail")
+        LOGGING.INFO(this, contextTAG, "Requested to send a mail")
         startActivity(Intent.createChooser(intent, "Send mail"))
     }
 }

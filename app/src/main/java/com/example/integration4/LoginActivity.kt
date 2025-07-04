@@ -1,7 +1,5 @@
 package com.example.integration4
 
-import ActivityUtils
-import LOGGING
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -25,7 +23,7 @@ import com.android.volley.toolbox.Volley
 import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.FileWriter
+import java.io.File
 import java.io.IOException
 import java.text.DateFormat
 import java.util.Date
@@ -73,11 +71,11 @@ class LoginActivity : AppCompatActivity() {
         }
 
         signupTV.setOnClickListener {
-            ActivityUtils.navigateToActivity(this, Intent(this, SignupActivity::class.java))
+            ActivityUtils.navigateToActivity(this, Intent(this, SignupActivity::class.java), "LoginActivity received button-signup action from user")
         }
 
         forgotPasswordTV.setOnClickListener {
-            ActivityUtils.navigateToActivity(this, Intent(this, ForgotPasswordActivity::class.java))
+            ActivityUtils.navigateToActivity(this, Intent(this, ForgotPasswordActivity::class.java), "LoginActivity received button-forgotpassword action from user")
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -111,14 +109,14 @@ class LoginActivity : AppCompatActivity() {
         val stringRequest = StringRequest(
             Request.Method.GET, "$url$loginParameter",
             { response ->
-                LOGGING.INFO(contextTAG, "Got response = $response")
+                LOGGING.INFO(this, contextTAG, "Got response = $response")
                 extractJsonData(response)
                 Handler(Looper.getMainLooper()).postDelayed({
                     alertDialog.dismiss()
                 }, 2000)
             },
             { error ->
-                LOGGING.DEBUG(contextTAG, "Got Error $error")
+                LOGGING.DEBUG(this, contextTAG, "Got Error $error")
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -157,28 +155,30 @@ class LoginActivity : AppCompatActivity() {
                         Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
                         animationView.setAnimation(R.raw.done)
                         animationView.playAnimation()
-                        createAndWriteToFile(jsonItem)
+                        createUserDataFile(jsonItem)
                         Handler(Looper.getMainLooper()).postDelayed({
-                            LOGGING.INFO(contextTAG, "Login Success with roomId = $roomId")
+                            LOGGING.INFO(this, contextTAG, "Login Success with roomId = $roomId")
 
                             if (roomId == "0" || roomId.isEmpty()) {
-                                LOGGING.DEBUG(contextTAG, "Invalid Room ID = 0 or empty")
+                                LOGGING.DEBUG(this, contextTAG, "Invalid Room ID = 0 or empty")
                                 ActivityUtils.navigateToActivity(
                                     this,
-                                    Intent(this, MainActivity::class.java)
+                                    Intent(this, MainActivity::class.java), "LoginActivity received login success and room id not available from database"
                                 )
                             } else {
+                                GlobalAccess.loadUserData(this)
                                 ActivityUtils.navigateToActivity(
                                     this,
-                                    Intent(this, RoomActivity::class.java)
+                                    Intent(this, RoomActivity::class.java), "LoginActivity received login success and room id is valid from database"
                                 )
                             }
+                            finish()
                         }, 2000)
 
                     }
 
                     emailStatus.toBoolean() && !passwordStatus.toBoolean() -> {
-                        LOGGING.DEBUG(contextTAG, "Login failed, Reason - ${getString(R.string.incorrect_password)}")
+                        LOGGING.DEBUG(this, contextTAG, "Login failed, Reason - ${getString(R.string.incorrect_password)}")
                         animationView.setAnimation(R.raw.error)
                         animationView.playAnimation()
                         resultTV.visibility = View.VISIBLE
@@ -186,7 +186,7 @@ class LoginActivity : AppCompatActivity() {
                     }
 
                     else -> {
-                        LOGGING.DEBUG(contextTAG, "Login failed, Reason - ${getString(R.string.no_user_data_found)}")
+                        LOGGING.DEBUG(this, contextTAG, "Login failed, Reason - ${getString(R.string.no_user_data_found)}")
                         animationView.setAnimation(R.raw.error)
                         animationView.playAnimation()
                         resultTV.visibility = View.VISIBLE
@@ -194,35 +194,29 @@ class LoginActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                LOGGING.DEBUG(contextTAG, "Login failed, Reason - ${getString(R.string.no_data_found)}")
+                LOGGING.DEBUG(this, contextTAG, "Login failed, Reason - ${getString(R.string.no_data_found)}")
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
                 resultTV.visibility = View.VISIBLE
                 resultTV.text = getString(R.string.no_data_found)
             }
         } catch (e: JSONException) {
-            LOGGING.DEBUG(contextTAG, "Login failed, Reason - ${e.printStackTrace()}")
+            LOGGING.DEBUG(this, contextTAG, "Login failed, Reason - ${e.printStackTrace()}")
             e.printStackTrace()
         }
     }
 
-    private fun createAndWriteToFile(userData: JSONObject) {
-
-        if (!ActivityUtils.directory.exists()) {
-            ActivityUtils.directory.mkdirs()
-        }
-        if (!ActivityUtils.userDataFile.exists()) {
-            ActivityUtils.userDataFile.createNewFile()
-        }
+    private fun createUserDataFile(userData: JSONObject) {
 
         try {
             userData.put("loginTime", DateFormat.getDateTimeInstance().format(Date()).toString())
-            FileWriter(ActivityUtils.userDataFile).use { it.write(userData.toString()) }
-            LOGGING.INFO(contextTAG, "Login Information : $userData")
-
+            ActivityUtils.getUserDataFile(this).writeText(userData.toString())
+            LOGGING.INFO(this, contextTAG, "Login Information : $userData")
         } catch (e: IOException) {
-            LOGGING.DEBUG(contextTAG, "Writing to Files failed : ${e.printStackTrace()}")
             e.printStackTrace()
+            LOGGING.DEBUG(this, contextTAG, "Writing to Files failed : ${e.printStackTrace()}")
+            Toast.makeText(this, "Failed to write file", Toast.LENGTH_SHORT).show()
         }
+
     }
 }

@@ -1,13 +1,12 @@
 package com.example.integration4
 
-import ActivityUtils
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.github.aachartmodel.aainfographics.aachartcreator.AAChartModel
 import com.github.aachartmodel.aainfographics.aachartcreator.AAChartType
 import com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
@@ -15,6 +14,7 @@ import com.github.aachartmodel.aainfographics.aachartcreator.AASeriesElement
 import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 
 class StatisticsFragment : Fragment() {
 
@@ -22,7 +22,6 @@ class StatisticsFragment : Fragment() {
     private lateinit var aaChartViewSpline: AAChartView
     private lateinit var aaChartViewPie: AAChartView
     private lateinit var jsonObject: JSONObject
-    private lateinit var userDataViewModel: UserDataViewModel
     private val categories = mutableListOf<String>()
     private val seriesArray = mutableListOf<AASeriesElement>()
     private val contextTAG: String = "StatisticsFragment"
@@ -30,20 +29,20 @@ class StatisticsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_statistics, container, false)
 
-        userDataViewModel = ViewModelProvider(this)[UserDataViewModel::class.java]
         aaChartViewColumn = view.findViewById(R.id.aaChartViewColumn)
         aaChartViewSpline = view.findViewById(R.id.aaChartViewSpline)
         aaChartViewPie = view.findViewById(R.id.aaChartViewPie)
 
         // Read JSON data
-        jsonObject = readJsonFromFile(ActivityUtils.roomMontlyExpensesFile)
+        val userDataFile = File(requireContext().getExternalFilesDir(null), getString(R.string.roomExpensesFileName))
+        jsonObject = readJsonFromFile(userDataFile)
 
         // Call setupChart() to populate data
         setupChart(jsonObject)
 
         applyCustomCharts("Bar Chart", AAChartType.Column, aaChartViewColumn)
         applyCustomCharts("Line Chart", AAChartType.Spline, aaChartViewSpline)
-        //applyPieChart("Pie Chart", AAChartType.Pie, aaChartViewPie, jsonObject, userDataViewModel.userName)
+        //applyPieChart("Pie Chart", AAChartType.Pie, aaChartViewPie, jsonObject, GlobalAccess.userName)
 
         // Need to implement Pie chart
 
@@ -51,9 +50,22 @@ class StatisticsFragment : Fragment() {
     }
 
     private fun readJsonFromFile(file: File): JSONObject {
-        val inputStream = FileInputStream(file)
-        val jsonString = inputStream.bufferedReader().use { it.readText() }
-        return JSONObject(jsonString)
+        try {
+
+            val inputStream = FileInputStream(file)
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            return JSONObject(jsonString)
+
+        } catch (e: FileNotFoundException) {
+            Log.e(contextTAG, "RoomExpenses File Not found")
+            Toast.makeText(requireContext(),"Please visit Room expenses first", Toast.LENGTH_SHORT).show()
+            LOGGING.ERROR(requireContext(), contextTAG, "Statistics Received RoomExpenses File Not Found exception")
+        }
+
+        return JSONObject("null")
+
+
+
     }
 
     private fun setupChart(jsonObject: JSONObject) {

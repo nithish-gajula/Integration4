@@ -1,7 +1,5 @@
 package com.example.integration4
 
-import ActivityUtils
-import LOGGING
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -98,14 +96,14 @@ class ForgotPasswordActivity : AppCompatActivity() {
         val stringRequest = object : StringRequest(
             Method.POST, getString(R.string.spreadsheet_url),
             { response ->
-                LOGGING.INFO(contextTAG, "Password reset request, Got Response $response")
+                LOGGING.INFO(this, contextTAG, "Password reset request, Got Response $response")
                 extractResetJsonData(response)
                 Handler(Looper.getMainLooper()).postDelayed({
                     alertDialog.dismiss()
                 }, 2000)
             },
             { error ->
-                LOGGING.DEBUG(contextTAG, "Password reset request, Got Error $error")
+                LOGGING.DEBUG(this, contextTAG, "Password reset request, Got Error $error")
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -148,12 +146,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     resetStatus.toBoolean() -> {
                         animationView.setAnimation(R.raw.protected_shield)
                         animationView.playAnimation()
-                        LOGGING.INFO(contextTAG, "Password Reset Success")
+                        LOGGING.INFO(this, contextTAG, "Password Reset Success")
                         Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
                         Handler(Looper.getMainLooper()).postDelayed({
                             ActivityUtils.navigateToActivity(
                                 this,
-                                Intent(this, LoginActivity::class.java)
+                                Intent(this, LoginActivity::class.java),"ForgotPasswordActivity received password reset successful"
                             )
                         }, 2000)
                     }
@@ -161,7 +159,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     !emailStatus.toBoolean() -> {
                         animationView.setAnimation(R.raw.error)
                         animationView.playAnimation()
-                        LOGGING.DEBUG(contextTAG, "Password Reset Error, Reason - ${getString(R.string.no_user_data_found)}")
+                        LOGGING.DEBUG(this, contextTAG, "Password Reset Error, Reason - ${getString(R.string.no_user_data_found)}")
                         resultTV.visibility = View.VISIBLE
                         resultTV.text = getString(R.string.no_user_data_found)
                     }
@@ -169,7 +167,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     else -> {
                         animationView.setAnimation(R.raw.error)
                         animationView.playAnimation()
-                        LOGGING.DEBUG(contextTAG, "Password Reset Error, Reason - ${getString(R.string.something_went_wrong)}")
+                        LOGGING.DEBUG(this, contextTAG, "Password Reset Error, Reason - ${getString(R.string.something_went_wrong)}")
                         resultTV.visibility = View.VISIBLE
                         resultTV.text = getString(R.string.something_went_wrong)
                     }
@@ -178,12 +176,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
             } else {
                 animationView.setAnimation(R.raw.error)
                 animationView.playAnimation()
-                LOGGING.DEBUG(contextTAG, "Password Reset Error, Reason - ${getString(R.string.no_data_found)}")
+                LOGGING.DEBUG(this, contextTAG, "Password Reset Error, Reason - ${getString(R.string.no_data_found)}")
                 resultTV.visibility = View.VISIBLE
                 resultTV.text = getString(R.string.no_data_found)
             }
         } catch (e: JSONException) {
-            LOGGING.DEBUG(contextTAG, "Password Reset Error, Reason - ${e.printStackTrace()}")
+            LOGGING.DEBUG(this, contextTAG, "Password Reset Error, Reason - ${e.printStackTrace()}")
             e.printStackTrace()
         }
     }

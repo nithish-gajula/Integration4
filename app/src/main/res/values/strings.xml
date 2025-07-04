@@ -58,5 +58,11 @@
     <string name="open_drawer">Open drawer</string>
     <string name="close_drawer">Close drawer</string>
 
+    <string name="userDataFileName">user_data.json</string>
+    <string name="userExpensesFileName">user_expenses.json</string>
+    <string name="roomExpensesFileName">room_expenses.json</string>
+    <string name="reportedLogsFileName">logs.txt</string>
+    <string name="reportedReadmeLogsFileName">logs.md</string>
+
 
 </resources>

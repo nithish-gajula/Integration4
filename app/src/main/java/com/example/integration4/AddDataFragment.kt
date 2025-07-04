@@ -1,10 +1,10 @@
 package com.example.integration4
 
-import LOGGING
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +15,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
@@ -35,7 +34,6 @@ class AddDataFragment : Fragment() {
     private lateinit var amount: EditText
     private lateinit var description: EditText
     private lateinit var date: EditText
-    private val userDataViewModel: UserDataViewModel by activityViewModels()
     private lateinit var id: String
     private lateinit var userName: String
     private lateinit var roomId: String
@@ -63,6 +61,8 @@ class AddDataFragment : Fragment() {
         amountTil = view.findViewById(R.id.amount_til)
         descriptionTil = view.findViewById(R.id.description_til)
 
+
+
         onCreateSetup()
 
         return view
@@ -70,9 +70,9 @@ class AddDataFragment : Fragment() {
 
     private fun onCreateSetup() {
 
-        id = userDataViewModel.userId
-        userName = userDataViewModel.userName
-        roomId = userDataViewModel.roomId
+        id = GlobalAccess.userId
+        userName = GlobalAccess.userName
+        roomId = GlobalAccess.roomId
 
         imageList = ArrayList()
         imageList.add(R.drawable.food_1)
@@ -205,7 +205,7 @@ class AddDataFragment : Fragment() {
                 object : StringRequest(
                     Method.POST, url,
                     Response.Listener { response ->
-                        LOGGING.INFO(contextTAG, "Upload Data, Got Response - $response")
+                        LOGGING.INFO(requireContext(),contextTAG, "Upload Data, Got Response - $response")
                         animationView.setAnimation(R.raw.done)
                         animationView.playAnimation()
                         Toast.makeText(
@@ -222,7 +222,7 @@ class AddDataFragment : Fragment() {
                         }, 2000)
                     },
                     Response.ErrorListener { error ->
-                        LOGGING.DEBUG(contextTAG, "Upload Data, Got Error - $error")
+                        LOGGING.DEBUG(requireContext(), contextTAG, "Upload Data, Got Error - $error")
                         animationView.setAnimation(R.raw.error)
                         animationView.playAnimation()
                     }
@@ -237,7 +237,7 @@ class AddDataFragment : Fragment() {
                             "amount" to amountVal,
                             "description" to descriptionVal,
                             "foodId" to foodId.toString(),
-                            "profileId" to userDataViewModel.profileId
+                            "profileId" to GlobalAccess.profileId
                         )
                     }
                 }

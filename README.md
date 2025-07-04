@@ -7,10 +7,21 @@ Room Budget is a Kotlin based Android application that performs operations like 
 https://github.com/ifyun/markdown-it-android - need to look and update logs 
 
 
-### Developer Notes :
+### Developer Shortcuts :
 
 To preview `Readme.md` file in VSCode -> `Ctrl + Shift + V`
 To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
+
+### Wireless Debugging :
+
+- Connect Mobile to 'ICPS 3FL 5GHz' wifi
+- make sure adb installed in desktop using 'adb version' command
+- Developer Options -> Wireless Debugging -> Enable -> Pair device with pairing code -> Note the IP, Port and Pairing Code (changes everytime)
+- type command in desktop in *sudo* : adb pair <IP>:<Port>
+- It asks for pairing code, Enter pairing code
+- If success, then type : adb connect <IP>:<Port>
+- adb devices, you can see the connected devices
+- android studio automatically detects it.
 
 Arial Black
 Dialog

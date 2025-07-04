@@ -1,10 +1,5 @@
 package com.example.integration4
 
-import ActivityUtils
-import CustomAdapter
-import Item
-import LOGGING
-import Section
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,7 +15,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import com.airbnb.lottie.LottieAnimationView
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
@@ -32,7 +26,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.FileWriter
+import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,7 +40,6 @@ class GetDataFragment : Fragment() {
     private lateinit var warningTV: TextView
     private lateinit var roomActivity: RoomActivity
     private var bottomSheetState: Boolean = true
-    private val userDataViewModel: UserDataViewModel by activityViewModels()
     private var groupedItemsJson = JSONObject()
     private val contextTAG: String = "GetDataFragment"
 
@@ -97,8 +90,8 @@ class GetDataFragment : Fragment() {
 
     private fun getItems() {
 
-        val userId = userDataViewModel.userId
-        val roomId = userDataViewModel.roomId
+        val userId = GlobalAccess.userId
+        val roomId = GlobalAccess.roomId
 
         val param = "?action=getItem&userId=$userId&roomId=$roomId"
         val url = resources.getString(R.string.spreadsheet_url)
@@ -108,11 +101,11 @@ class GetDataFragment : Fragment() {
         val stringRequest = StringRequest(
             Request.Method.GET, url + param,
             { response ->
-                FileWriter(ActivityUtils.userExpensesFile).use { it.write(response) }
+                ActivityUtils.getUserExpensesFile(requireContext()).writeText(response)
                 loadUserExpensesFromStorage()
             }
         ) { error ->
-            LOGGING.DEBUG(contextTAG, "Get Expenses, Got error = $error")
+            LOGGING.DEBUG(requireContext(), contextTAG, "Get Expenses, Got error = $error")
         }
         val socketTimeOut = 50000
         val policy: RetryPolicy =
@@ -124,16 +117,16 @@ class GetDataFragment : Fragment() {
 
     private fun loadUserExpensesFromStorage() {
         try {
-            if (!ActivityUtils.userExpensesFile.exists()) {
-                ActivityUtils.userExpensesFile.createNewFile()
+            if(!ActivityUtils.getUserExpensesFile(requireContext()).exists()){
+                ActivityUtils.getUserExpensesFile(requireContext()).createNewFile()
                 getItems()
             } else {
-                val content = ActivityUtils.userExpensesFile.readText()
+                val content = ActivityUtils.getUserExpensesFile(requireContext()).readText()
                 parseItems(content)
             }
 
         } catch (e: IOException) {
-            LOGGING.DEBUG(contextTAG, "Loading User Expenses from storage error - $e")
+            LOGGING.DEBUG(requireContext(), contextTAG, "Loading User Expenses from storage error - $e")
             e.printStackTrace()
         }
     }
@@ -156,7 +149,7 @@ class GetDataFragment : Fragment() {
                         groupedItemsJson.getJSONObject(monthKey).getDouble("MonthTotal")
 
                     val newData = JSONObject().apply {
-                        put("position1", userDataViewModel.userName)
+                        put("position1", GlobalAccess.userName)
                         put("position2", limitDescription(jo.getString("description")))
                         put("position3", dateFormats.format1)
                         put("position4", "₹ ${jo.getString("amount")}")
@@ -170,7 +163,7 @@ class GetDataFragment : Fragment() {
                 } else {
                     val newDataArray = JSONArray()
                     val newData = JSONObject().apply {
-                        put("position1", userDataViewModel.userName)
+                        put("position1", GlobalAccess.userName)
                         put("position2", limitDescription(jo.getString("description")))
                         put("position3", dateFormats.format1)
                         put("position4", "₹ ${jo.getString("amount")}")
@@ -198,7 +191,7 @@ class GetDataFragment : Fragment() {
 
             categorizeItems(sortedMonths)
         } catch (e: JSONException) {
-            LOGGING.DEBUG(contextTAG, "error - $e")
+            LOGGING.DEBUG(requireContext(), contextTAG, "error - $e")
             warningTV.visibility = View.VISIBLE
             warningTV.text = jsonResponse
             roomActivity.alertDialog.dismiss()
@@ -254,7 +247,7 @@ class GetDataFragment : Fragment() {
                 }
             }
         } catch (e: JSONException) {
-            LOGGING.DEBUG(contextTAG, "error - $e")
+            LOGGING.DEBUG(requireContext(), contextTAG, "error - $e")
             e.printStackTrace()
         }
 
@@ -309,12 +302,12 @@ class GetDataFragment : Fragment() {
             anm1.setAnimation(R.raw.please_wait)
             anm1.playAnimation()
             val url = resources.getString(R.string.spreadsheet_url)
-            LOGGING.INFO(contextTAG, "Requesting delete item -> userId=${userDataViewModel.userId}, roomId=${userDataViewModel.roomId}, rowID=$id")
+            LOGGING.INFO(requireContext(), contextTAG, "Requesting delete item -> userId=${GlobalAccess.userId}, roomId=${GlobalAccess.roomId}, rowID=$id")
             val stringRequest: StringRequest =
                 object : StringRequest(
                     Method.POST, url,
                     Response.Listener { response ->
-                        LOGGING.INFO(contextTAG, "Delete Item Request, Got Response $response")
+                        LOGGING.INFO(requireContext(), contextTAG, "Delete Item Request, Got Response $response")
                         anm1.setAnimation(R.raw.delete_file)
                         anm1.playAnimation()
                         Handler(Looper.getMainLooper()).postDelayed({
@@ -325,7 +318,7 @@ class GetDataFragment : Fragment() {
                         Toast.makeText(activity, response, Toast.LENGTH_SHORT).show()
                     },
                     Response.ErrorListener { error ->
-                        LOGGING.DEBUG(contextTAG, "Delete Item Request, Got error $error")
+                        LOGGING.DEBUG(requireContext(), contextTAG, "Delete Item Request, Got error $error")
                         anm1.setAnimation(R.raw.error)
                         anm1.playAnimation()
                     }
@@ -335,8 +328,8 @@ class GetDataFragment : Fragment() {
                             HashMap()
                         //here we pass params
                         param["action"] = "deleteItem"
-                        param["userId"] = userDataViewModel.userId
-                        param["roomId"] = userDataViewModel.roomId
+                        param["userId"] = GlobalAccess.userId
+                        param["roomId"] = GlobalAccess.roomId
                         param["dataId"] = id
                         return param
                     }
