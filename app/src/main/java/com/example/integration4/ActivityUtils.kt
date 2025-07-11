@@ -105,7 +105,7 @@ object ActivityUtils {
 
     }
 
-    fun relaunch(activity: Activity) {
+    fun restart(activity: Activity) {
         activity.finishAffinity()
         activity.startActivity(activity.intent)
     }

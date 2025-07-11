@@ -55,7 +55,7 @@ object LOGGING {
                         ">$msg \n *** \n"
             reportLog(context, logContent, markdownContent)
         }
-        Log.d(tag, msg)
+        Log.e(tag, msg)
     }
 
     private fun getCurrentDateTime(): String {

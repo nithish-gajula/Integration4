@@ -67,7 +67,6 @@ class SplashScreenActivity : AppCompatActivity() {
             try {
                 val fileCreated = file.createNewFile()
                 if (fileCreated) {
-                    Log.i(contextTAG, "File created: ${file.absolutePath}")
                     LOGGING.INFO(this, contextTAG, "File created: ${file.absolutePath}")
                 } else {
                     Log.e(contextTAG, "Failed to create file: ${file.absolutePath}")

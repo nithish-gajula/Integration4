@@ -11,6 +11,8 @@ https://github.com/ifyun/markdown-it-android - need to look and update logs
 
 To preview `Readme.md` file in VSCode -> `Ctrl + Shift + V`
 To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
+To align the code in Android Studio -> `Ctrl + Alt + L`
+To Minimize and Maximize the Functions in Android Studio -> `Ctrl + Shift + -` and `Ctrl + Shift + +`
 
 ### Wireless Debugging :
 

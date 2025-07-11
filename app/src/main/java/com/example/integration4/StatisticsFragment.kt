@@ -1,10 +1,15 @@
 package com.example.integration4
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.github.aachartmodel.aainfographics.aachartcreator.AAChartModel
@@ -21,51 +26,67 @@ class StatisticsFragment : Fragment() {
     private lateinit var aaChartViewColumn: AAChartView
     private lateinit var aaChartViewSpline: AAChartView
     private lateinit var aaChartViewPie: AAChartView
-    private lateinit var jsonObject: JSONObject
+    private lateinit var chartsLayout: ScrollView
+    private lateinit var warningTV: TextView
     private val categories = mutableListOf<String>()
     private val seriesArray = mutableListOf<AASeriesElement>()
     private val contextTAG: String = "StatisticsFragment"
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_statistics, container, false)
 
         aaChartViewColumn = view.findViewById(R.id.aaChartViewColumn)
         aaChartViewSpline = view.findViewById(R.id.aaChartViewSpline)
         aaChartViewPie = view.findViewById(R.id.aaChartViewPie)
+        chartsLayout = view.findViewById(R.id.chartsSV)
+        warningTV = view.findViewById(R.id.warningTV)
 
-        // Read JSON data
-        val userDataFile = File(requireContext().getExternalFilesDir(null), getString(R.string.roomExpensesFileName))
-        jsonObject = readJsonFromFile(userDataFile)
+        val jsonObject = readRoomExpensesJsonFile()
 
-        // Call setupChart() to populate data
-        setupChart(jsonObject)
+        jsonObject?.let {
+            setupChart(it)
+            applyCustomCharts("Bar Chart", AAChartType.Column, aaChartViewColumn)
+            applyCustomCharts("Line Chart", AAChartType.Spline, aaChartViewSpline)
+            // TODO: Implement pie chart using it
+            applyPieChart("Pie Chart", AAChartType.Pie, aaChartViewPie, it, GlobalAccess.userName)
+//            applyPieChart12()
+        }
 
-        applyCustomCharts("Bar Chart", AAChartType.Column, aaChartViewColumn)
-        applyCustomCharts("Line Chart", AAChartType.Spline, aaChartViewSpline)
-        //applyPieChart("Pie Chart", AAChartType.Pie, aaChartViewPie, jsonObject, GlobalAccess.userName)
-
-        // Need to implement Pie chart
 
         return view
     }
 
-    private fun readJsonFromFile(file: File): JSONObject {
-        try {
+    private fun readRoomExpensesJsonFile(): JSONObject? {
+        return try {
+            val file = File(
+                requireContext().getExternalFilesDir(null),
+                getString(R.string.roomExpensesFileName)
+            )
 
-            val inputStream = FileInputStream(file)
-            val jsonString = inputStream.bufferedReader().use { it.readText() }
-            return JSONObject(jsonString)
+            val jsonString = file.bufferedReader().use { it.readText() }
+            JSONObject(jsonString)
 
         } catch (e: FileNotFoundException) {
-            Log.e(contextTAG, "RoomExpenses File Not found")
-            Toast.makeText(requireContext(),"Please visit Room expenses first", Toast.LENGTH_SHORT).show()
-            LOGGING.ERROR(requireContext(), contextTAG, "Statistics Received RoomExpenses File Not Found exception")
+            Toast.makeText(requireContext(), "Please visit Room expenses first", Toast.LENGTH_SHORT)
+                .show()
+            LOGGING.ERROR(
+                requireContext(),
+                contextTAG,
+                "Statistics Received RoomExpenses File Not Found exception"
+            )
+            warningTV.text = "Room expenses not found,\nPlease visit Room expenses first"
+            warningTV.visibility = View.VISIBLE
+            chartsLayout.visibility = View.GONE
+
+            null
+        } catch (e: Exception) {
+            LOGGING.ERROR(requireContext(), contextTAG, "Unexpected error: ${e.message}")
+            null
         }
-
-        return JSONObject("null")
-
-
-
     }
 
     private fun setupChart(jsonObject: JSONObject) {
@@ -132,19 +153,23 @@ class StatisticsFragment : Fragment() {
             aaChartView.aa_drawChartWithChartModel(aaChartModel)
         } else {
             Log.e(contextTAG, "Categories or seriesArray is empty. Chart cannot be drawn.")
+            warningTV.text = "Charts available for more than one roommates"
+            warningTV.visibility = View.VISIBLE
+            chartsLayout.visibility = View.GONE
         }
     }
 
     private fun applyPieChart12() {
 
-            val aaChartModel = AAChartModel()
-                .chartType(AAChartType.Pie) // Set chart type
-                .title("Pie Chart")
-                .subtitle("Expenses of nithish gajula")
-                .dataLabelsEnabled(true)
-                .tooltipEnabled(false)
-                .yAxisTitle("Expenditure")
-                .series(arrayOf(
+        val aaChartModel = AAChartModel()
+            .chartType(AAChartType.Pie) // Set chart type
+            .title("Pie Chart")
+            .subtitle("Expenses of nithish gajula")
+            .dataLabelsEnabled(true)
+            .tooltipEnabled(false)
+            .yAxisTitle("Expenditure")
+            .series(
+                arrayOf(
                     AASeriesElement()
                         .name("Tokyo")
                         .yAxis(4),
@@ -157,13 +182,20 @@ class StatisticsFragment : Fragment() {
                     AASeriesElement()
                         .name("Berlin")
                         .yAxis(4),
-                ))
+                )
+            )
 
-            // Assign the chart model to the AAChartView
-            aaChartViewPie.aa_drawChartWithChartModel(aaChartModel)
+        // Assign the chart model to the AAChartView
+        aaChartViewPie.aa_drawChartWithChartModel(aaChartModel)
     }
 
-    private fun applyPieChart(title: String, type: AAChartType, aaChartView: AAChartView, jsonObject: JSONObject, userName: String) {
+    private fun applyPieChart(
+        title: String,
+        type: AAChartType,
+        aaChartView: AAChartView,
+        jsonObject: JSONObject,
+        userName: String
+    ) {
 
         // Extract the roommates array from JSON
         val roommatesArray = jsonObject.getJSONArray("Roommates").getJSONArray(1)
@@ -174,7 +206,7 @@ class StatisticsFragment : Fragment() {
         for (i in 0 until roommatesArray.length()) {
             if (roommatesArray.getString(i) == userName) {
                 userIndex = i
-                Log.d(contextTAG,"Found userIndex $userIndex")
+                Log.d(contextTAG, "Found userIndex $userIndex")
             }
         }
 
@@ -193,16 +225,17 @@ class StatisticsFragment : Fragment() {
             if (key != "Roommates") {
                 val monthArray = jsonObject.getJSONArray(key)
 
-                Log.d(contextTAG,"monthArray at $key - $monthArray")
+                Log.d(contextTAG, "monthArray at $key - $monthArray")
 
                 // Get both the user's individual expense and the shared one, if any
-                val individualExpenses = monthArray.optJSONArray(1)?.optDouble(userIndex, 0.0) ?: 0.0
+                val individualExpenses =
+                    monthArray.optJSONArray(1)?.optDouble(userIndex, 0.0) ?: 0.0
                 val sharedExpenses = monthArray.optJSONArray(0)?.optDouble(userIndex, 0.0) ?: 0.0
 
                 // Sum both individual and shared expenses
                 val totalExpenses = individualExpenses + sharedExpenses
 
-                Log.d(contextTAG,"userExpenses at $key - $totalExpenses")
+                Log.d(contextTAG, "userExpenses at $key - $totalExpenses")
 
                 // Add month and corresponding user expense to chart data
                 categories.add(key)  // e.g., "Apr 2024", "May 2024"
@@ -210,8 +243,8 @@ class StatisticsFragment : Fragment() {
             }
         }
 
-        Log.d(contextTAG,"categories - $categories")
-        Log.d(contextTAG,"seriesArray - $seriesArray")
+        Log.d(contextTAG, "categories - $categories")
+        Log.d(contextTAG, "seriesArray - $seriesArray")
 
         if (categories.isNotEmpty() && seriesArray.isNotEmpty()) {
             val aaChartModel = AAChartModel()
@@ -222,9 +255,13 @@ class StatisticsFragment : Fragment() {
                 .dataLabelsEnabled(true)
                 .tooltipEnabled(false)
                 .yAxisTitle("Expenditure")
-                .series(arrayOf(AASeriesElement()
-                    .name("Expenses")
-                    .data(seriesArray.toTypedArray())))
+                .series(
+                    arrayOf(
+                        AASeriesElement()
+                            .name("Expenses")
+                            .data(seriesArray.toTypedArray())
+                    )
+                )
 
             // Assign the chart model to the AAChartView
             aaChartView.aa_drawChartWithChartModel(aaChartModel)

@@ -3,11 +3,13 @@ package com.example.integration4
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ListAdapter
 import android.widget.ListView
@@ -36,6 +38,7 @@ class GetDataFragment : Fragment() {
     private var adapter: ListAdapter? = null
     private lateinit var listView: ListView
     private lateinit var totalAmountTV: TextView
+    private lateinit var reloadGetDataIMG: ImageView
     private var totalAmount: Double = 0.0
     private lateinit var warningTV: TextView
     private lateinit var roomActivity: RoomActivity
@@ -48,18 +51,29 @@ class GetDataFragment : Fragment() {
         listView = view.findViewById(R.id.lv_items)
         totalAmountTV = view.findViewById(R.id.total_Amount_id)
         warningTV = view.findViewById(R.id.get_data_warning_id)
+        reloadGetDataIMG = view.findViewById(R.id.reload_get_data_IMG)
         roomActivity = activity as RoomActivity
-        val bottomSheet = view.findViewById<FrameLayout>(R.id.bottom_sheet_id)
+//        val bottomSheet = view.findViewById<FrameLayout>(R.id.bottom_sheet_id)
 
-        BottomSheetBehavior.from(bottomSheet).apply {
-            peekHeight = 0
-            this.state = BottomSheetBehavior.STATE_EXPANDED
-        }
+//        BottomSheetBehavior.from(bottomSheet).apply {
+//            peekHeight = 0
+//            this.state = BottomSheetBehavior.STATE_EXPANDED
+//        }
 
         if (GlobalAccess.isUserAddedNewData) {
             getItems()
         } else {
             loadUserExpensesFromStorage()
+        }
+
+        reloadGetDataIMG.setOnClickListener {
+            totalAmount = 0.0
+            GlobalAccess.isUserAddedNewData = true
+
+            // Fully recreate the fragment
+            val fragmentTransaction = parentFragmentManager.beginTransaction()
+            fragmentTransaction.replace(R.id.fragment_container, GetDataFragment())
+            fragmentTransaction.commit()
         }
 
         listView.setOnItemClickListener { parent, _, position, _ ->
@@ -72,17 +86,10 @@ class GetDataFragment : Fragment() {
                 val fullDescription = selectedItem.fullDescription
 
                 delete(id, userName, date, amount, fullDescription)
-            } else {
-                bottomSheetState =
-                    BottomSheetBehavior.STATE_EXPANDED == BottomSheetBehavior.from(bottomSheet).state
-
-                if (!bottomSheetState) {
-                    BottomSheetBehavior.from(bottomSheet).state = BottomSheetBehavior.STATE_EXPANDED
-                    bottomSheetState = true
-                } else {
-                    BottomSheetBehavior.from(bottomSheet).state = BottomSheetBehavior.STATE_COLLAPSED
-                    bottomSheetState = false
-                }
+            } else if (selectedItem is Section) {
+                val month = selectedItem.sectionName
+                val amount = selectedItem.amount
+                Toast.makeText(requireContext(),"$month :$amount", Toast.LENGTH_SHORT).show()
             }
         }
         return view
@@ -143,6 +150,7 @@ class GetDataFragment : Fragment() {
                 val monthKey = dateFormats.format2
 
                 if (groupedItemsJson.has(monthKey)) {
+
                     val monthData =
                         groupedItemsJson.getJSONObject(monthKey).getJSONArray("MonthData")
                     val monthTotal =
@@ -157,6 +165,7 @@ class GetDataFragment : Fragment() {
                         put("position6", jo.getString("foodId"))
                         put("position7", jo.getString("description"))
                     }
+
                     totalAmount += jo.getString("amount").toDouble()
                     monthData.put(newData)
                     groupedItemsJson.getJSONObject(monthKey).put("MonthTotal", monthTotal + jo.getString("amount").toDouble())
@@ -179,6 +188,7 @@ class GetDataFragment : Fragment() {
                         put("MonthTotal", jo.getString("amount").toDouble())
                     }
 
+                    totalAmount += jo.getString("amount").toDouble()
                     groupedItemsJson.put(monthKey, monthObject)
                 }
             }

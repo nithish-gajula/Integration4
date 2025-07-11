@@ -1,17 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_profile"
-        android:title="Profile" />
-    <item
-        android:id="@+id/menu_relaunch"
-        android:title="Relaunch" />
-    <item
-        android:id="@+id/menu_contact_us"
-        android:title="Contact Us" />
-    <item
-        android:id="@+id/view_logs"
-        android:title="Logs(Beta)" />
+        android:id="@+id/menu_restart"
+        android:title="Restart" />
     <item
         android:id="@+id/menu_about"
         android:title="About" />

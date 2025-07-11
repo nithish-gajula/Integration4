@@ -42,7 +42,11 @@ class GetAllDataFragment : Fragment() {
     Party
     Travelling */
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
 
         val view = inflater.inflate(R.layout.fragment_get_all_data, container, false)
         listView = view.findViewById(R.id.lv_items2)
@@ -68,19 +72,23 @@ class GetAllDataFragment : Fragment() {
 
     private fun getItems() {
         val roomId = GlobalAccess.roomId
-        val param = "?action=getTotal&roomId=$roomId"
-        val url = resources.getString(R.string.spreadsheet_url)
+        val param = "?action=getTotalValues&roomId=$roomId"
+        val url = resources.getString(R.string.spreadsheet_url2)
         roomActivity.animationView.setAnimation(R.raw.files_loading)
         roomActivity.animationView.playAnimation()
         roomActivity.alertDialog.show()
         val stringRequest = StringRequest(
             Request.Method.GET, url + param,
-            { response -> parseItems(response) }
+            { response ->
+                parseItems(response)
+                createMonthlyExpensesJson(response)
+            }
         ) { error ->
             LOGGING.INFO(requireContext(), contextTAG, "Got error = $error")
         }
 
-        val policy: RetryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+        val policy: RetryPolicy =
+            DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
         stringRequest.setRetryPolicy(policy)
         val queue = Volley.newRequestQueue(activity)
         queue.add(stringRequest)
@@ -89,79 +97,62 @@ class GetAllDataFragment : Fragment() {
     private fun parseItems(jsonResponse: String) {
         try {
             val jsonObj = JSONObject(jsonResponse)
-            val resultJson = createMonthlyExpensesJson(jsonResponse)
-            createAndWriteToFile(resultJson)
-            Log.d(contextTAG,resultJson.toString())
 
             val jsonArray = jsonObj.getJSONArray("items")
 
             for (i in 0 until jsonArray.length()) {
-                val jo1 = jsonArray.getJSONObject(i)
+                val row = jsonArray.getJSONObject(i)
 
-                val jo2 = jo1.getJSONArray("records")
+                val dateFormats = convertDateFormat(row.getString("date"))
+                val monthKey = dateFormats.format2
 
-                for (j in 0 until jo2.length()) {
-                    val jo = jo2.getJSONObject(j)
+                if (groupedItemsJson.has(monthKey)) {
+                    val monthData =
+                        groupedItemsJson.getJSONObject(monthKey).getJSONArray("MonthData")
+                    val monthTotal =
+                        groupedItemsJson.getJSONObject(monthKey).getDouble("MonthTotal")
 
-                    val dateFormats = convertDateFormat(jo.getString("date"))
-                    val monthKey = dateFormats.format2
-
-                    if (groupedItemsJson.has(monthKey)) {
-                        val monthData = groupedItemsJson.getJSONObject(monthKey).getJSONArray("MonthData")
-                        val monthTotal = groupedItemsJson.getJSONObject(monthKey).getDouble("MonthTotal")
-
-                        val newData = JSONObject().apply {
-                            put("position1", jo.getString("userName"))
-                            put("position2", limitDescription(jo.getString("description")))
-                            put("position3", dateFormats.format1)
-                            put("position4", "₹ ${jo.getString("amount")}")
-                            put("position5", jo.getString("dataId"))
-                            put("position6", jo.getString("profileId"))
-                            put("position7", jo.getString("description"))
-                        }
-
-                        monthData.put(newData)
-                        groupedItemsJson.getJSONObject(monthKey).put("MonthTotal", monthTotal + jo.getString("amount").toDouble())
-                    } else {
-                        val newDataArray = JSONArray()
-                        val newData = JSONObject().apply {
-                            put("position1", jo.getString("userName"))
-                            put("position2", limitDescription(jo.getString("description")))
-                            put("position3", dateFormats.format1)
-                            put("position4", "₹ ${jo.getString("amount")}")
-                            put("position5", jo.getString("dataId"))
-                            put("position6", jo.getString("profileId"))
-                            put("position7", jo.getString("description"))
-                        }
-                        newDataArray.put(newData)
-
-                        val monthObject = JSONObject().apply {
-                            put("MonthName", monthKey)
-                            put("MonthData", newDataArray)
-                            put("MonthTotal", jo.getString("amount").toDouble())
-                        }
-
-                        groupedItemsJson.put(monthKey, monthObject)
+                    val newData = JSONObject().apply {
+                        put("position1", row.getString("userName"))
+                        put("position2", limitDescription(row.getString("description")))
+                        put("position3", dateFormats.format1)
+                        put("position4", "₹ ${row.getString("amount")}")
+                        put("position5", row.getString("dataId"))
+                        put("position6", row.getString("profileId"))
+                        put("position7", row.getString("description"))
                     }
 
-                }
+                    monthData.put(newData)
+                    groupedItemsJson.getJSONObject(monthKey)
+                        .put("MonthTotal", monthTotal + row.getString("amount").toDouble())
+                } else {
+                    val newDataArray = JSONArray()
+                    val newData = JSONObject().apply {
+                        put("position1", row.getString("userName"))
+                        put("position2", limitDescription(row.getString("description")))
+                        put("position3", dateFormats.format1)
+                        put("position4", "₹ ${row.getString("amount")}")
+                        put("position5", row.getString("dataId"))
+                        put("position6", row.getString("profileId"))
+                        put("position7", row.getString("description"))
+                    }
+                    newDataArray.put(newData)
 
+                    val monthObject = JSONObject().apply {
+                        put("MonthName", monthKey)
+                        put("MonthData", newDataArray)
+                        put("MonthTotal", row.getString("amount").toDouble())
+                    }
+
+                    groupedItemsJson.put(monthKey, monthObject)
+                }
             }
 
             val months = groupedItemsJson.keys().asSequence().toList()
-            Log.d(contextTAG, "Type of months: ${months.javaClass.simpleName}")
-            Log.d(contextTAG, "Type of months: ${months.javaClass.name}")
-            Log.d(contextTAG, "Months list size: ${months.size}")
-            Log.d(contextTAG, "Months list contents: $months")
             val dateFormat = SimpleDateFormat("MMM yyyy", Locale.ENGLISH)
             val dateList = months.map { dateFormat.parse(it) }
             val sortedDescending = dateList.sortedDescending()
             val sortedMonths = sortedDescending.map { dateFormat.format(it) }
-            Log.d(contextTAG, "Type of sorted months: ${sortedMonths.javaClass.simpleName}")
-            Log.d(contextTAG, "Type of sorted months: ${sortedMonths.javaClass.name}")
-            Log.d(contextTAG, "Sorted Months list size: ${sortedMonths.size}")
-            Log.d(contextTAG, "Sorted Months list contents: $sortedMonths")
-
             categorizeItems(sortedMonths)
         } catch (e: JSONException) {
             LOGGING.DEBUG(requireContext(), contextTAG, "Got error $e")
@@ -172,67 +163,61 @@ class GetAllDataFragment : Fragment() {
         }
     }
 
-    private fun createMonthlyExpensesJson(jsonResponse: String): JSONObject {
+    private fun createMonthlyExpensesJson(jsonResponse: String) {
         val jsonObj = JSONObject(jsonResponse)
         val itemsArray = jsonObj.getJSONArray("items")
 
-        // Create the result JSON object
         val resultJson = JSONObject()
-
-        // Roommates list (Name and number of roommates)
+        val userIdsList = mutableListOf<String>()
         val roommatesList = mutableListOf<String>()
-        var totalRoommates = 0
+        val monthlyExpenses = mutableMapOf<String, JSONArray>()
 
-        // A map to hold the expenses per month
-        val monthlyExpenses = mutableMapOf<String, MutableList<MutableList<Int>>>()
-
+        // First pass: collect unique userIds and names
         for (i in 0 until itemsArray.length()) {
-            val userObj = itemsArray.getJSONObject(i)
-            val userId = userObj.getString("userId")
-            val records = userObj.getJSONArray("records")
+            val row = itemsArray.getJSONObject(i)
+            val userId = row.getString("userId")
+            val userName = row.getString("userName")
 
-            // Extract the roommate's name (from records) and increment the total roommates count
-            val userName = records.getJSONObject(0).getString("userName")
-            roommatesList.add(userName)
-            totalRoommates += 1
-
-            for (j in 0 until records.length()) {
-                val record = records.getJSONObject(j)
-                val date = record.getString("date") // e.g., "04/21/2024"
-                val amount = record.getInt("amount")
-
-                // Extract month and year from the date
-                val monthYear = getMonthYearFromDate(date)
-
-                // Initialize the month if not already present
-                if (!monthlyExpenses.containsKey(monthYear)) {
-                    monthlyExpenses[monthYear] = mutableListOf(mutableListOf(), mutableListOf())
-                }
-
-                // Depending on the userId, add the amount to the correct list (index 0 or 1)
-                if (userId == "m2410P1718R5625Z") {
-                    monthlyExpenses[monthYear]!![0].add(amount) // Person A's expenses
-                } else {
-                    monthlyExpenses[monthYear]!![1].add(amount) // Person B's expenses
-                }
+            if (userId !in userIdsList) {
+                userIdsList.add(userId)
+                roommatesList.add(userName)
             }
         }
 
-        // Add the roommates information to the result JSON
+        val totalRoommates = userIdsList.size
+
+        // Add roommates meta info
         resultJson.put("Roommates", JSONArray().apply {
-            put(JSONArray().put(totalRoommates)) // Number of roommates
-            put(JSONArray(roommatesList)) // Roommate names
+            put(totalRoommates)
+            put(JSONArray(roommatesList))
+            put(JSONArray(userIdsList))
+
         })
 
-        // Add the monthly expenses to the result JSON
-        for ((month, expenses) in monthlyExpenses) {
-            resultJson.put(month, JSONArray().apply {
-                put(JSONArray(expenses[0])) // Person A's expenses for the month
-                put(JSONArray(expenses[1])) // Person B's expenses for the month
-            })
+        // Second pass: fill monthly expenses
+        for (i in 0 until itemsArray.length()) {
+            val row = itemsArray.getJSONObject(i)
+            val userId = row.getString("userId")
+            val date = row.getString("date")
+            val amount = row.getInt("amount")
+            val monthYear = getMonthYearFromDate(date)
+            val userIndex = userIdsList.indexOf(userId)
+
+            val monthArray = monthlyExpenses.getOrPut(monthYear) {
+                JSONArray().apply {
+                    repeat(totalRoommates) { put(JSONArray()) }
+                }
+            }
+
+            monthArray.getJSONArray(userIndex).put(amount)
         }
 
-        return resultJson
+        // Add monthly data to result JSON
+        for ((month, expenses) in monthlyExpenses) {
+            resultJson.put(month, expenses)
+        }
+
+        createAndWriteToFile(resultJson)
     }
 
     // Helper function to extract "Month Year" from the date string
@@ -259,7 +244,6 @@ class GetAllDataFragment : Fragment() {
         }
         return "$monthName $year"
     }
-
 
     private fun categorizeItems(months: List<String>) {
         val dataList = mutableListOf<Any>()
@@ -334,7 +318,12 @@ class GetAllDataFragment : Fragment() {
     }
 
 
-    private fun popUpDetails(userName: String, date: String, amount: String, fullDescription: String) {
+    private fun popUpDetails(
+        userName: String,
+        date: String,
+        amount: String,
+        fullDescription: String
+    ) {
         val mBuilder = AlertDialog.Builder(requireActivity())
         val view1: View = layoutInflater.inflate(R.layout.popup_details, null)
         val userNameD = view1.findViewById<TextView>(R.id.user_confirm_id)
@@ -353,8 +342,7 @@ class GetAllDataFragment : Fragment() {
 
     private fun createAndWriteToFile(jsonObject: JSONObject) {
         try {
-            val fileName = getString(R.string.roomExpensesFileName)
-            val roomExpensesFile = File(requireContext().getExternalFilesDir(null), fileName)
+            val roomExpensesFile = ActivityUtils.getRoomExpensesFile(requireContext())
             roomExpensesFile.writeText(jsonObject.toString(4))
             LOGGING.DEBUG(requireContext(), contextTAG, "Successfully wrote JSON to file.")
 

@@ -5,19 +5,23 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.airbnb.lottie.LottieAnimationView
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import androidx.core.view.get
-import androidx.core.view.size
+import com.google.android.material.imageview.ShapeableImageView
+import com.google.android.material.navigation.NavigationView
 
 class RoomActivity : AppCompatActivity() {
 
@@ -26,7 +30,16 @@ class RoomActivity : AppCompatActivity() {
     lateinit var alertDialog: AlertDialog
     private lateinit var customOverflowIcon: ImageView
     private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var userprofileImageView: ShapeableImageView
+    private lateinit var userFullNameTV: TextView
+    private lateinit var userEmailTV: TextView
     private lateinit var toolbar: Toolbar
+    private lateinit var toggle: ActionBarDrawerToggle
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private var latestProfileImage: Int = 1
+    private lateinit var userFullName: String
+    private lateinit var userEmail: String
     private val contextTAG: String = "RoomActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +48,9 @@ class RoomActivity : AppCompatActivity() {
 
         GlobalAccess.loadUserData(this)
 
+        bottomNavigation = findViewById(R.id.bottom_navigation)
+        drawerLayout = findViewById(R.id.room_drawer_layout)
+        navigationView = findViewById(R.id.room_nav_view)
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -42,12 +58,16 @@ class RoomActivity : AppCompatActivity() {
         supportActionBar!!.setLogo(R.mipmap.app_icon_48)
         supportActionBar!!.setDisplayUseLogoEnabled(true)
 
+        toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_drawer, R.string.close_drawer)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+        navigationView.itemIconTintList = null
+        toggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.black)
+
         customOverflowIcon = toolbar.findViewById(R.id.custom_overflow_icon)
         customOverflowIcon.setOnClickListener {
             openCustomMenu()
         }
-
-        bottomNavigation = findViewById(R.id.bottom_navigation)
 
         val dialogBuilder = AlertDialog.Builder(this)
         val inflater = LayoutInflater.from(this)
@@ -57,11 +77,21 @@ class RoomActivity : AppCompatActivity() {
         alertDialog = dialogBuilder.create()
         alertDialog.setCanceledOnTouchOutside(false)
 
+
+        val headerView = navigationView.getHeaderView(0)
+        userprofileImageView = headerView.findViewById(R.id.user_profile_pic)
+        userFullNameTV = headerView.findViewById(R.id.user_full_name)
+        userEmailTV = headerView.findViewById(R.id.user_email)
+        latestProfileImage = GlobalAccess.profileId.toInt()
+        userprofileImageView.setImageResource(ActivityUtils.avatars[GlobalAccess.profileId.toInt() - 1])
+        userFullName = GlobalAccess.userName
+        userEmail = GlobalAccess.email
+        userFullNameTV.text = userFullName
+        userEmailTV.text = userEmail
+
         // Initial Fragment selection & Bottom Navigation bar style
         bottomNavigation.selectedItemId = R.id.nav_home
         replaceFragment(DefaultFragment())
-        toolbar.title = "Home"
-        toolbar.setTitleTextAppearance(this, R.style.ToolbarTitleStyle) // Revert to normal style
         updateIconTint("#EE437D")
 
         bottomNavigation.setOnItemSelectedListener { item ->
@@ -105,6 +135,18 @@ class RoomActivity : AppCompatActivity() {
             true
         }
 
+        navigationView.setNavigationItemSelectedListener { item ->
+            if (item.itemId == R.id.nav_profile) {
+                ActivityUtils.navigateToActivity(this, Intent(this, EditDetailsActivity::class.java), "RoomActivity received nav-profile action from user")
+            } else if (item.itemId == R.id.nav_view_logs) {
+                ActivityUtils.navigateToActivity(this, Intent(this, TestingActivity::class.java), "RoomActivity received nav-view_logs action from user")
+            } else if (item.itemId == R.id.nav_report) {
+                ActivityUtils.navigateToActivity(this, Intent(this, ContactUsActivity::class.java), "RoomActivity received nav-report action from user")
+            }
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
+        }
+
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (pressedTime + 2000 > System.currentTimeMillis()) {
@@ -117,6 +159,15 @@ class RoomActivity : AppCompatActivity() {
             }
         })
 
+    }
+
+    // Optionally handle back button to close drawer if opened
+    override fun onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
     }
 
     private fun updateIconTint(selectedColorHex: String) {
@@ -143,23 +194,9 @@ class RoomActivity : AppCompatActivity() {
 
         popupMenu.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.menu_profile -> {
-                    ActivityUtils.navigateToActivity(this, Intent(this, EditDetailsActivity::class.java), "MainActivity received menu-profile action from user")
-                    true
-                }
 
-                R.id.menu_relaunch -> {
-                    ActivityUtils.relaunch(this)
-                    true
-                }
-
-                R.id.menu_contact_us -> {
-                    ActivityUtils.navigateToActivity(this, Intent(this, ContactUsActivity::class.java), "MainActivity received menu-contactUs action from user")
-                    true
-                }
-
-                R.id.view_logs -> {
-                    ActivityUtils.navigateToActivity(this, Intent(this, TestingActivity::class.java), "MainActivity received button-TestingActivity action from user")
+                R.id.menu_restart -> {
+                    ActivityUtils.restart(this)
                     true
                 }
 
@@ -183,15 +220,11 @@ class RoomActivity : AppCompatActivity() {
                             dialog.dismiss()
                         }
                         .show()
-
                     true
                 }
-
-
                 else -> false
             }
         }
-
         popupMenu.show()
     }
 

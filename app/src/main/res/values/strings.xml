@@ -2,6 +2,8 @@
     <string name="app_name">Integration4</string>
 
     <string name="spreadsheet_url">https://script.google.com/macros/s/AKfycbzFKvumCrRwhmzmxBPM0T7fez8Nog5fmywyRdnxJb5wzSRFvon80by2Y-ZK6aEqM6pW/exec</string>
+    <string name="spreadsheet_url2">https://script.google.com/macros/s/AKfycbyETAr_EKsrTZip7xV07SRtDHLOiYnAJOEmTiJR1q18zSFJP00QUNZnQDVQuHODri96ng/exec</string>
+<!--    https://script.google.com/macros/s/AKfycbwJMfshK8mzrApmgjqzArM7lPAeOYnF1D8276IAt616qEhWqC0z4AWo5553P0czgAi5MQ/exec?action=getTotalValues&roomId=1325v197C107d-->
 
 
     <string name="incorrect_password">Incorrect Password</string>

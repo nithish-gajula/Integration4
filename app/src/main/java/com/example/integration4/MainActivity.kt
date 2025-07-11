@@ -13,14 +13,20 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.airbnb.lottie.LottieAnimationView
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.google.android.material.imageview.ShapeableImageView
+import com.google.android.material.navigation.NavigationView
 import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONException
 import org.json.JSONObject
@@ -39,6 +45,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var alertDialog: AlertDialog
     private lateinit var customOverflowIcon: ImageView
     private lateinit var toolbar: Toolbar
+    private lateinit var userprofileImageView: ShapeableImageView
+    private lateinit var userFullNameTV: TextView
+    private lateinit var userEmailTV: TextView
+    private lateinit var toggle: ActionBarDrawerToggle
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private var latestProfileImage: Int = 1
+    private lateinit var userFullName: String
+    private lateinit var userEmail: String
     private val contextTAG: String = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,13 +67,21 @@ class MainActivity : AppCompatActivity() {
         resultTV = findViewById(R.id.result_tv_id)
         requestQueue = Volley.newRequestQueue(applicationContext)
 
+        drawerLayout = findViewById(R.id.main_drawer_layout)
+        navigationView = findViewById(R.id.main_nav_view)
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         // Display application icon in the toolbar
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-        supportActionBar!!.setLogo(R.drawable.android_os)
+        supportActionBar!!.setLogo(R.mipmap.app_icon_48)
         supportActionBar!!.setDisplayUseLogoEnabled(true)
+
+        toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_drawer, R.string.close_drawer)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+        navigationView.itemIconTintList = null
+        toggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.black)
 
         // Find the custom overflow icon ImageView
         customOverflowIcon = toolbar.findViewById(R.id.custom_overflow_icon)
@@ -94,6 +117,29 @@ class MainActivity : AppCompatActivity() {
             ActivityUtils.navigateToActivity(this, Intent(this, RoomActivity::class.java), "MainActivity Received isRoomLengthLessThanOne = false from GlobalAccess Object")
         }
 
+        navigationView.setNavigationItemSelectedListener { item ->
+            if (item.itemId == R.id.nav_profile) {
+                ActivityUtils.navigateToActivity(this, Intent(this, EditDetailsActivity::class.java), "MainActivity received nav-profile action from user")
+            } else if (item.itemId == R.id.nav_view_logs) {
+                ActivityUtils.navigateToActivity(this, Intent(this, TestingActivity::class.java), "MainActivity received nav-view_logs action from user")
+            } else if (item.itemId == R.id.nav_report) {
+                ActivityUtils.navigateToActivity(this, Intent(this, ContactUsActivity::class.java), "MainActivity received nav-report action from user")
+            }
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
+        }
+
+        val headerView = navigationView.getHeaderView(0)
+        userprofileImageView = headerView.findViewById(R.id.user_profile_pic)
+        userFullNameTV = headerView.findViewById(R.id.user_full_name)
+        userEmailTV = headerView.findViewById(R.id.user_email)
+        latestProfileImage = GlobalAccess.profileId.toInt()
+        userprofileImageView.setImageResource(ActivityUtils.avatars[GlobalAccess.profileId.toInt() - 1])
+        userFullName = GlobalAccess.userName
+        userEmail = GlobalAccess.email
+        userFullNameTV.text = userFullName
+        userEmailTV.text = userEmail
+
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finishAffinity()
@@ -108,24 +154,9 @@ class MainActivity : AppCompatActivity() {
 
         popupMenu.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.menu_profile -> {
-                    ActivityUtils.navigateToActivity(
-                        this,
-                        Intent(this, EditDetailsActivity::class.java), "MainActivity received menu-profile action from user"
-                    )
-                    true
-                }
 
-                R.id.menu_relaunch -> {
-                    ActivityUtils.relaunch(this)
-                    true
-                }
-
-                R.id.menu_contact_us -> {
-                    ActivityUtils.navigateToActivity(
-                        this,
-                        Intent(this, ContactUsActivity::class.java), "MainActivity received menu-contactUs action from user"
-                    )
+                R.id.menu_restart -> {
+                    ActivityUtils.restart(this)
                     true
                 }
 
@@ -249,11 +280,7 @@ class MainActivity : AppCompatActivity() {
                         animationView.setAnimation(R.raw.protected_shield)
                         animationView.playAnimation()
                         Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
-                        LOGGING.INFO(this,
-                            contextTAG, "Room Joining Success - userID = ${jsonItem.getString("id")}, RoomID = ${
-                                jsonItem.getString("roomId")
-                            }"
-                        )
+                        LOGGING.INFO(this, contextTAG, "Room Joining Success RoomID = $roomID")
                         storeRoomId(roomID)
                         Handler(Looper.getMainLooper()).postDelayed({
                             ActivityUtils.navigateToActivity(

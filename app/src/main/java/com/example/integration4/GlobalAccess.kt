@@ -38,20 +38,14 @@ object GlobalAccess {
 
     fun loadUserData(context: Context) {
 
-        Log.i(contextTAG, "entered loadUserData function")
-
         if (!ActivityUtils.getUserDataFile(context).exists()) {
             ActivityUtils.getUserDataFile(context).createNewFile()
         }
 
         try {
 
-            Log.i(contextTAG, "entered loadUserData - try clause")
-
             val content = ActivityUtils.getUserDataFile(context).readText()
             val userData = JSONObject(content)
-
-            Log.i(contextTAG, "entered loadUserData - userData : $userData")
 
             userId = userData.getString("id")
             userName = userData.getString("userName")
@@ -62,8 +56,6 @@ object GlobalAccess {
             roomId = userData.getString("roomId")
             adminStatus = userData.getString("adminStatus")
             profileId = userData.getString("profileId")
-
-            Log.i(contextTAG, "entered loadUserData - userData values assigned to variables")
 
             val info = """
                 userid : $userId

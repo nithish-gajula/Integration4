@@ -14,3 +14,19 @@ local.properties
 .DS_Store
 Thumbs.db
 
+# Ignore apk/keystore/log/temp/cache
+*.apk
+*.jks
+*.keystore
+*.log
+*.tmp
+
+# Auto-generated captures and reports
+captures/
+test-results/
+coverage/
+output.json
+
+# Ignore crashlytics & firebase
+crashlytics-build.properties
+fabric.properties
