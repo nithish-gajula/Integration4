@@ -47,7 +47,6 @@ dependencies {
     implementation ("com.github.tapadoo:alerter:7.2.4")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation ("com.github.jitpack:example:1.1")
     implementation("com.github.ismaeldivita:chip-navigation-bar:1.4.0")

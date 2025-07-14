@@ -115,6 +115,17 @@ class MainActivity : AppCompatActivity() {
             ActivityUtils.navigateToActivity(this, Intent(this, LoginActivity::class.java), "MainActivity Received navigateToLoginActivity = true from GlobalAccess Object")
         } else if (!GlobalAccess.isRoomLengthLessThanOne) {
             ActivityUtils.navigateToActivity(this, Intent(this, RoomActivity::class.java), "MainActivity Received isRoomLengthLessThanOne = false from GlobalAccess Object")
+        } else {
+            val headerView = navigationView.getHeaderView(0)
+            userprofileImageView = headerView.findViewById(R.id.user_profile_pic)
+            userFullNameTV = headerView.findViewById(R.id.user_full_name)
+            userEmailTV = headerView.findViewById(R.id.user_email)
+            latestProfileImage = GlobalAccess.profileId.toInt()
+            userprofileImageView.setImageResource(ActivityUtils.avatars[GlobalAccess.profileId.toInt() - 1])
+            userFullName = GlobalAccess.userName
+            userEmail = GlobalAccess.email
+            userFullNameTV.text = userFullName
+            userEmailTV.text = userEmail
         }
 
         navigationView.setNavigationItemSelectedListener { item ->
@@ -128,17 +139,6 @@ class MainActivity : AppCompatActivity() {
             drawerLayout.closeDrawer(GravityCompat.START)
             true
         }
-
-        val headerView = navigationView.getHeaderView(0)
-        userprofileImageView = headerView.findViewById(R.id.user_profile_pic)
-        userFullNameTV = headerView.findViewById(R.id.user_full_name)
-        userEmailTV = headerView.findViewById(R.id.user_email)
-        latestProfileImage = GlobalAccess.profileId.toInt()
-        userprofileImageView.setImageResource(ActivityUtils.avatars[GlobalAccess.profileId.toInt() - 1])
-        userFullName = GlobalAccess.userName
-        userEmail = GlobalAccess.email
-        userFullNameTV.text = userFullName
-        userEmailTV.text = userEmail
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

@@ -1,58 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/statistics_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/purple_light"
     android:orientation="vertical"
-    android:gravity="center"
     tools:context=".StatisticsFragment">
 
-    <TextView
-        android:id="@+id/warningTV"
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:text="Room expenses file not found Please visit Room expenses first"
-        android:textSize="25sp"
-        android:visibility="gone"/>
+        app:tabIndicatorColor="@color/purple"
+        app:tabSelectedTextColor="@color/purple"
+        app:tabTextAppearance="@style/TabFont"
+        app:tabTextColor="@color/grey" />
 
-    <ScrollView
-        android:id="@+id/chartsSV"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="visible"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="1dp">
-
-            <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
-                android:id="@+id/aaChartViewColumn"
-                android:layout_width="match_parent"
-                android:layout_height="500dp"
-                android:layout_marginVertical="5dp"/>
-
-            <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
-                android:id="@+id/aaChartViewSpline"
-                android:layout_width="match_parent"
-                android:layout_height="500dp"
-                android:layout_marginVertical="5dp"/>
-
-            <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
-                android:id="@+id/aaChartViewPie"
-                android:layout_width="match_parent"
-                android:layout_height="500dp"
-                android:layout_marginVertical="5dp"/>
-
-        </LinearLayout>
-
-
-    </ScrollView>
-
-
-
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 </LinearLayout>

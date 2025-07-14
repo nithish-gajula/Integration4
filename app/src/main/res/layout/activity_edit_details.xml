@@ -15,7 +15,7 @@
         android:layout_marginVertical="5dp"
         android:textColor="#000"
         android:textStyle="bold"
-        android:textSize="40dp" />
+        android:textSize="40sp" />
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/profile_image_id"
@@ -25,6 +25,33 @@
         app:strokeColor="@color/grey"
         app:strokeWidth="1dp"
         android:src="@drawable/ic_instagram_16" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="5dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/roomId_TV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sample text"
+            android:layout_marginHorizontal="2dp"
+            android:textSize="15sp"/>
+
+        <ImageView
+            android:id="@+id/copy_IMG"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:src="@drawable/ic_copy_24"
+            android:layout_marginHorizontal="2dp"
+            android:contentDescription="Copy Room ID"
+            android:clickable="true"/>
+
+
+    </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
 
@@ -137,7 +164,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
             android:text="Forgot Password?"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/reset_password_tv_id"
@@ -146,7 +173,7 @@
             android:clickable="true"
             android:text="Change here"
             android:textColor="#0076F7"
-            android:textSize="15dp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
     </LinearLayout>

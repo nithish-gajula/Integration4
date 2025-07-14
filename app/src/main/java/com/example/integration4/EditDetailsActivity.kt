@@ -1,5 +1,8 @@
 package com.example.integration4
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -8,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -23,6 +27,8 @@ import com.google.android.material.textfield.TextInputLayout
 class EditDetailsActivity : AppCompatActivity() {
 
     private lateinit var nameET: EditText
+    private lateinit var roomIdTV: TextView
+    private lateinit var copyIMG: ImageView
     private lateinit var emailET: EditText
     private lateinit var phoneNumberET: EditText
     private lateinit var ageET: EditText
@@ -41,6 +47,8 @@ class EditDetailsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit_details)
 
         profileImage = findViewById(R.id.profile_image_id)
+        roomIdTV = findViewById(R.id.roomId_TV)
+        copyIMG = findViewById(R.id.copy_IMG)
         nameET = findViewById(R.id.name_et_id)
         emailET = findViewById(R.id.email_et_id)
         phoneNumberET = findViewById(R.id.phone_no_et_id)
@@ -71,12 +79,20 @@ class EditDetailsActivity : AppCompatActivity() {
         alertDialog = dialogBuilder.create()
         alertDialog.setCanceledOnTouchOutside(false)
 
+        roomIdTV.text = GlobalAccess.roomId
         nameET.setText(GlobalAccess.userName)
         emailET.setText(GlobalAccess.email)
         phoneNumberET.setText(GlobalAccess.phoneNumber)
         ageET.setText(GlobalAccess.age)
 
         profileImage.setOnClickListener { selectImagePopUp() }
+        copyIMG.setOnClickListener {
+            val roomID = roomIdTV.text.trim().toString()
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Room ID", roomID)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(this, "Copied $roomID", Toast.LENGTH_SHORT).show()
+        }
         saveBTN.setOnClickListener { savaDataFunction() }
         resetPasswordTV.setOnClickListener { ActivityUtils.navigateToActivity(this, Intent(this, ForgotPasswordActivity::class.java),"EditDetailsActivity received button-forgotpassword action from user") }
 

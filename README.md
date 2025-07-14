@@ -1,19 +1,22 @@
 # Room-Budget (Beta)
 ## Alias Integration4
+Readme.md
 
 Room Budget is a Kotlin based Android application that performs operations like sending, receiving, and manipulating data from Google Spreadsheets using Google App Script. The app was developed using Android Studio and facilitates efficient budget management for users. And is developed by `Nithish Gajula`
 
 https://github.com/ifyun/markdown-it-android - need to look and update logs 
 
 
-### Developer Shortcuts :
-
+#### Visual Studio Code Shortcuts Keys
 To preview `Readme.md` file in VSCode -> `Ctrl + Shift + V`
 To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
-To align the code in Android Studio -> `Ctrl + Alt + L`
-To Minimize and Maximize the Functions in Android Studio -> `Ctrl + Shift + -` and `Ctrl + Shift + +`
 
-### Wireless Debugging :
+#### Android Studio Shortcuts Keys
+To reformat the code in Android Studio -> `Ctrl + Alt + L`
+To Expand all code blocks in Android Studio -> `Ctrl + Shift + +`
+To Collapse all code blocks in Android Studio -> `Ctrl + Shift + -`
+
+#### Wireless Debugging Procedure :
 
 - Connect Mobile to 'ICPS 3FL 5GHz' wifi
 - make sure adb installed in desktop using 'adb version' command

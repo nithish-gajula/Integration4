@@ -41,5 +41,9 @@
         <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
     </style>
 
+    <style name="TabFont" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+    </style>
+
 
 </resources>
