@@ -129,10 +129,14 @@ class RoomExpensesChartsFragment : Fragment() {
     private fun applyCustomCharts(title: String, type: AAChartType, aaChartView: AAChartView) {
         // Ensure categories and seriesArray have been populated before drawing chart
         if (categories.isNotEmpty() && seriesArray.isNotEmpty()) {
-            val aaChartModel = AAChartModel().chartType(type) // Set chart type
-                .title(title).subtitle("Comparing Expenses of Roommates")
+            val aaChartModel = AAChartModel()
+                .chartType(type) // Set chart type
+                .title(title)
+                .subtitle("Comparing Expenses of Roommates")
                 .categories(categories.toTypedArray()) // Use the months from the JSON
-                .dataLabelsEnabled(true).tooltipEnabled(false).yAxisTitle("Expenditure")
+                .dataLabelsEnabled(false)
+                .tooltipEnabled(true)
+                .yAxisTitle("Expenditure")
                 .series(seriesArray.toTypedArray()) // Use dynamically generated series
 
             // Assign the chart model to the AAChartView

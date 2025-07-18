@@ -46,11 +46,12 @@ class MyExpensesChartsFragment : Fragment() {
             if (categories.isNotEmpty() && seriesArray.isNotEmpty()) {
                 applyCustomCharts("Bar Chart", AAChartType.Column, aaChartViewColumn)
                 applyCustomCharts("Line Chart", AAChartType.Spline, aaChartViewSpline)
-                applyPieChart("Area Chart", AAChartType.Area, aaChartViewArea)
+                applyCustomCharts("Area Chart", AAChartType.Areaspline, aaChartViewArea)
                 applyPieChart("Pie Chart", AAChartType.Pie, aaChartViewPie)
 
             }
         }
+
         return view
     }
 
@@ -73,6 +74,38 @@ class MyExpensesChartsFragment : Fragment() {
                 )
             )
 //        aaChartViewColumn_testing.aa_drawChartWithChartModel(chartModel)
+
+        /**
+        val example_bar_chart_configs =
+            "{\"animationDuration\":500," +
+                    "\"animationType\":\"Linear\"," +
+                    "\"backgroundColor\":\"#ffffff\"," +
+                    "\"borderRadius\":0.0," +
+                    "\"categories\":[\"\",\"\",\"\",\"\"]," +
+                    "\"chartType\":\"Bar\"," +
+                    "\"colorsTheme\":[\"#fe117c\",\"#ffc069\",\"#06caf4\",\"#7dffc0\"]," +
+                    "\"dataLabelsEnabled\":false," +
+                    "\"gradientColorEnable\":false," +
+                    "\"inverted\":false," +
+                    "\"legendEnabled\":true," +
+                    "\"markerRadius\":6.0," +
+                    "\"markerSymbolStyle\":\"Normal\"," +
+                    "\"polar\":false," +
+                    "\"series\":[{\"data\":[3.0,6.0,4.0,7.0],\"name\":\"Series 1\"}]," +
+                    "\"stacking\":\"False\"," +
+                    "\"subtitle\":\"\"," +
+                    "\"title\":\"Single Horizontal Bar Chart\"," +
+                    "\"titleStyle\":{}," +
+                    "\"xAxisGridLineWidth\":0.0," +
+                    "\"xAxisLabelsEnabled\":true," +
+                    "\"xAxisReversed\":false," +
+                    "\"yAxisGridLineWidth\":1.0," +
+                    "\"yAxisLabelsEnabled\":true," +
+                    "\"yAxisReversed\":false," +
+                    "\"zoomType\":\"None\"}"
+        */
+
+
     }
 
     private fun readRoomExpensesJsonFile(): JSONObject? {
@@ -134,6 +167,7 @@ class MyExpensesChartsFragment : Fragment() {
             .categories(categories.toTypedArray()) // Use the months from the JSON
             .dataLabelsEnabled(true)
             .tooltipEnabled(true)
+            .animationDuration(500)
             .series(
                 arrayOf(
                     AASeriesElement()
