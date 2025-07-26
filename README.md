@@ -8,14 +8,15 @@ https://github.com/ifyun/markdown-it-android - need to look at and update logs
 
 
 #### Visual Studio Code Shortcuts Keys
-To preview the `Readme.md` file in VSCode -> `Ctrl + Shift + V`
-To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
-To format any document, install and then set the **Prettier** extension as the default formatter using `Ctrl + Shift + P`, then format file -> `Shift + Alt + F`
+- To preview the `Readme.md` file in VSCode -> `Ctrl + Shift + V`
+- To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
+- To format any document, install and then set the **Prettier** extension as the default formatter using `Ctrl + Shift + P`,  
+  then format file -> `Shift + Alt + F`
 
 #### Android Studio Shortcuts Keys
-**Reformat** the code in Android Studio -> `Ctrl + Alt + L`
-**Expand** all code blocks in Android Studio -> `Ctrl + Shift + +`
-**Collapse** all code blocks in Android Studio -> `Ctrl + Shift + -`
+- **Reformat** the code in Android Studio -> `Ctrl + Alt + L`
+- **Expand** all code blocks in Android Studio -> `Ctrl + Shift + +`
+- **Collapse** all code blocks in Android Studio -> `Ctrl + Shift + -`
 
 #### Wireless Debugging Procedure :
 
