@@ -2,30 +2,32 @@
 ## Alias Integration4
 Readme.md
 
-Room Budget is a Kotlin based Android application that performs operations like sending, receiving, and manipulating data from Google Spreadsheets using Google App Script. The app was developed using Android Studio and facilitates efficient budget management for users. And is developed by `Nithish Gajula`
+Room Budget is a Kotlin-based Android application that performs operations like sending, receiving, and manipulating data from Google Spreadsheets using Google App Script. The app was developed using Android Studio and facilitates efficient budget management for users. And is developed by `Nithish Gajula`
 
-https://github.com/ifyun/markdown-it-android - need to look and update logs 
+https://github.com/ifyun/markdown-it-android - need to look at and update logs 
 
 
 #### Visual Studio Code Shortcuts Keys
-To preview `Readme.md` file in VSCode -> `Ctrl + Shift + V`
-To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
+- To preview the `Readme.md` file in VSCode -> `Ctrl + Shift + V`
+- To format the json document in VSCode -> `Ctrl + K` then `Ctrl + F`
+- To format any document, install and then set the **Prettier** extension as the default formatter using `Ctrl + Shift + P`,  
+  then format file -> `Shift + Alt + F`
 
 #### Android Studio Shortcuts Keys
-To reformat the code in Android Studio -> `Ctrl + Alt + L`
-To Expand all code blocks in Android Studio -> `Ctrl + Shift + +`
-To Collapse all code blocks in Android Studio -> `Ctrl + Shift + -`
+- **Reformat** the code in Android Studio -> `Ctrl + Alt + L`
+- **Expand** all code blocks in Android Studio -> `Ctrl + Shift + +`
+- **Collapse** all code blocks in Android Studio -> `Ctrl + Shift + -`
 
 #### Wireless Debugging Procedure :
 
 - Connect Mobile to 'ICPS 3FL 5GHz' wifi
-- make sure adb installed in desktop using 'adb version' command
-- Developer Options -> Wireless Debugging -> Enable -> Pair device with pairing code -> Note the IP, Port and Pairing Code (changes everytime)
+- Make sure adb is installed on the desktop using the 'adb version' command
+- Developer Options -> Wireless Debugging -> Enable -> Pair device with pairing code -> Note the IP, Port, and Pairing Code (changes every time)
 - type command in desktop in *sudo* : adb pair <IP>:<Port>
-- It asks for pairing code, Enter pairing code
-- If success, then type : adb connect <IP>:<Port>
+- It asks for a pairing code. Enter pairing code
+- If success, then type: adb connect <IP>:<Port>
 - adb devices, you can see the connected devices
-- android studio automatically detects it.
+- Android Studio automatically detects it.
 
 Arial Black
 Dialog
@@ -41,7 +43,7 @@ Verdana
 
 ffc34d
 
-Below is example markdown content
+Below is an example of markdown content
 
 
 # Heading 1
