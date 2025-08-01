@@ -1,32 +1,41 @@
-# Ignore Android Studio project files
+# === Android Studio specific ===
 .idea/
 *.iml
-
-# Ignore Gradle-related files
-.gradle/
-/build/
-**/build/
-
-# Ignore local.properties (contains SDK paths)
 local.properties
 
-# MacOS, Windows, and Linux system files
-.DS_Store
-Thumbs.db
+# === Gradle build output ===
+.gradle/
+build/
+**/build/
+.externalNativeBuild/
+.cxx/
 
-# Ignore apk/keystore/log/temp/cache
+# === System files ===
+.DS_Store       # macOS
+Thumbs.db       # Windows
+
+# === Auto-generated & temp files ===
+captures/
+*.log
+*.tmp
 *.apk
 *.jks
 *.keystore
-*.log
-*.tmp
 
-# Auto-generated captures and reports
-captures/
+# === Test & coverage ===
 test-results/
 coverage/
 output.json
 
-# Ignore crashlytics & firebase
+# === Firebase / Crashlytics ===
 crashlytics-build.properties
 fabric.properties
+
+# === Optional: IDE asset settings ===
+/.idea/assetWizardSettings.xml
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/navEditor.xml
+/.idea/workspace.xml
+
